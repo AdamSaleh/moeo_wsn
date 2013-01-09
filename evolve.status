@@ -2,6 +2,9 @@
 ### GENERAL ########################################################################
 # --help=0                                 # -h : Prints this message
 # --stopOnUnknownParam=1                   # Stop if unkown param entered
+--pPath=/home/asaleh/Diplomka/moeo_wsn/evolve # -t : Python path
+--pModule=ObjectiveVectorTraitsPrecomputed # -m : Python module
+--pAlgo=spea2                            # -a : Evolution algorithm
 
 ### PARAM ##########################################################################
 # --popSize=100                            # -P : Population size

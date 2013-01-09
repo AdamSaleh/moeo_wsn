@@ -61,10 +61,7 @@ def getResults(pathToScalar):
 def evaluate(maxMonitorNodes,forwarderThreshold):
 	s_maxMonitorNodes = str(math.floor(maxMonitorNodes))
         s_forwarderThreshold = str(math.floor(10*forwarderThreshold)/10)
-        val_dict= {
-	  '{{template-maxMonitorNodes}}':s_maxMonitorNodes,
-	  '{{template-forwarderThreshold}}':s_forwarderThreshold
-	}
+        val_dict= {'{{template-maxMonitorNodes}}':s_maxMonitorNodes,'{{template-forwarderThreshold}}':s_forwarderThreshold}
         input_vals = "maxMonitorNodes-" + s_maxMonitorNodes + "_forwarderThreshold-" + s_forwarderThreshold
 	dir_name =exp_folder + input_vals +"/"
 	

@@ -37,6 +37,7 @@
 
 #include <Python.h>
 #include <stdio.h>
+#include <sstream>
 #include <moeo>
 #include <es/eoRealInitBounded.h>
 #include <es/eoRealOp.h>
@@ -46,160 +47,94 @@ using namespace std;
 PyObject *pModule, *pFuncMin, *pFuncMax,*pFuncNo,
 *pFuncMinBounds, *pFuncMaxBounds,*pFuncNoParams,*pFuncEval;
 
-bool py_minimizing (int index)
-    {
-
+bool py_bool_function(PyObject *fn,int index){
     bool out = false;	
-        PyObject *pArgs, *pValue;
-	if (pFuncMin && PyCallable_Check(pFuncMin)) {
-		pArgs = PyTuple_New(1);
-		pValue = PyInt_FromLong(index);
-		/*handle errors*/
-		/* pValue reference stolen here: */
-		PyTuple_SetItem(pArgs, 0, pValue);
-		pValue = PyObject_CallObject(pFuncMin, pArgs);
-		Py_DECREF(pArgs);
-		if (pValue != NULL) {
-			out= (Py_True == pValue);
-		}
-		else {
-			PyErr_Print();
-		}
+    PyObject *pArgs, *pValue;
+    if (fn && PyCallable_Check(fn)) {
+        pArgs = PyTuple_New(1);
+	pValue = PyInt_FromLong(index);
+	PyTuple_SetItem(pArgs, 0, pValue);
+	pValue = PyObject_CallObject(fn, pArgs);
+	Py_DECREF(pArgs);
+	if (pValue != NULL) {
+		out= (Py_True == pValue);
 	}
-	
-				Py_DECREF(pValue);
-
-        return out;
-    }
-
-bool py_maximizing (int index)
-    {
-
-    bool out = false;	
-        PyObject *pArgs, *pValue;
-	if (pFuncMax && PyCallable_Check(pFuncMax)) {
-		pArgs = PyTuple_New(1);
-		pValue = PyInt_FromLong(index);
-		/*handle errors*/
-		/* pValue reference stolen here: */
-		PyTuple_SetItem(pArgs, 0, pValue);
-		pValue = PyObject_CallObject(pFuncMax, pArgs);
-		Py_DECREF(pArgs);
-		if (pValue != NULL) {
-			out= (Py_True == pValue);
-		}
-		else {
-			PyErr_Print();
-		}
+	else {
+		PyErr_Print();
 	}
-	
-	Py_DECREF(pValue);
+     }
+     Py_DECREF(pValue);
 
-        return out;
-    }
+     return out;
+}
 
-int py_nObjectives ()
-    {
-
+int py_int_function(PyObject *fn)
+{
     long out = 0;	
         PyObject *pArgs, *pValue;
-	if (pFuncNo && PyCallable_Check(pFuncNo)) {
-
-		pValue = PyObject_CallObject(pFuncNo, NULL);
-
-
+	if (fn && PyCallable_Check(fn)) {
+		pValue = PyObject_CallObject(fn, NULL);
 		if (pValue != NULL) {
 			out= PyInt_AsLong(pValue);
-
 		}
 		else {
 			PyErr_Print();
 		}
 	}
-	
-			Py_DECREF(pValue);
-
+	Py_DECREF(pValue);
+    
         return out;
+}
+
+double py_double_function(PyObject *fn,int index){
+    double out = 0;	
+    PyObject *pArgs, *pValue;
+    if (fn && PyCallable_Check(fn)) {
+	pArgs = PyTuple_New(1);
+	pValue = PyInt_FromLong(index);
+	PyTuple_SetItem(pArgs, 0, pValue);
+	pValue = PyObject_CallObject(fn, pArgs);
+	Py_DECREF(pArgs);
+	if (pValue != NULL) {
+		out= PyFloat_AsDouble(pValue);
+	}
+	else {
+		PyErr_Print();
+	}
     }
+    Py_DECREF(pValue);
+    return out;
+}
+
+bool py_minimizing (int index)
+{
+    return py_bool_function(pFuncMin,index);
+}
+
+bool py_maximizing (int index)
+{
+    return py_bool_function(pFuncMax,index);
+}
+
+int py_nObjectives ()
+{
+    return py_int_function(pFuncNo); 
+}
 
 double py_minimalBounds(int index)
-    {
-
-    double out = 0;	
-        PyObject *pArgs, *pValue;
-	if (pFuncMinBounds && PyCallable_Check(pFuncMinBounds)) {
-		pArgs = PyTuple_New(1);
-		pValue = PyInt_FromLong(index);
-		/*handle errors*/
-		/* pValue reference stolen here: */
-		PyTuple_SetItem(pArgs, 0, pValue);
-		pValue = PyObject_CallObject(pFuncMinBounds, pArgs);
-		Py_DECREF(pArgs);
-		if (pValue != NULL) {
-			out= PyFloat_AsDouble(pValue);
-		}
-		else {
-			PyErr_Print();
-		}
-	}
-	
-				Py_DECREF(pValue);
-
-        return out;
-    }
+{
+    return py_double_function(pFuncMinBounds,index); 
+}
 
 double py_maximalBounds(int index)
-    {
-
-    double out = 0;	
-        PyObject *pArgs, *pValue;
-	if (pFuncMaxBounds && PyCallable_Check(pFuncMaxBounds)) {
-		pArgs = PyTuple_New(1);
-		pValue = PyInt_FromLong(index);
-		/*handle errors*/
-		/* pValue reference stolen here: */
-		PyTuple_SetItem(pArgs, 0, pValue);
-		pValue = PyObject_CallObject(pFuncMaxBounds, pArgs);
-		Py_DECREF(pArgs);
-		if (pValue != NULL) {
-
-			out= PyFloat_AsDouble(pValue);
-		}
-		else {
-			PyErr_Print();
-		}
-	}
-	
-	Py_DECREF(pValue);
-
-        return out;
-    }
+{
+    return py_double_function(pFuncMaxBounds,index);
+}
 
 int py_noParams ()
-    {
-
-    int out = 0;	
-        PyObject *pArgs, *pValue;
-	if (pFuncNoParams && PyCallable_Check(pFuncNoParams)) {
-
-		pValue = PyObject_CallObject(pFuncNoParams, NULL);
-
-
-		if (pValue != NULL) {
-			out= PyInt_AsLong(pValue);
-		}
-		else {
-			PyErr_Print();
-		}
-	}
-	
-			Py_DECREF(pValue);
-
-        return out;
-    }
-
-
-
+{
+    return py_int_function(pFuncNoParams); 
+}
 
 // the moeoObjectiveVectorTraits : minimizing 2 objectives
 class OVT : public moeoObjectiveVectorTraits
@@ -319,19 +254,27 @@ int main (int argc, char *argv[])
     double M_EPSILON = parser.createParam(0.01, "mutEpsilon", "epsilon for mutation",'e',"Param").value();
     double P_CROSS = parser.createParam(0.25, "pCross", "Crossover probability",'C',"Param").value();
     double P_MUT = parser.createParam(0.35, "pMut", "Mutation probability",'M',"Param").value();
-    
+    string P_PATH = parser.createParam(string("/tmp/evolve"),"pPath","Python path",'t').value(); 
+    string P_MODULE = parser.createParam(string("ObjectiveVectorTraits"),"pModule","Python module",'m').value(); 
+    string P_ALGO = parser.createParam(string("nsgaII"),"pAlgo","Evolution algorithm",'a').value(); 
+   cout << P_PATH << P_MODULE; 
     Py_Initialize();              // will use python for glue
     // Add PROJECT to PATH
-    
-    PyRun_SimpleString(
-          "import os, sys, threading\nsys.path.append('/home/asaleh/Diplomka/moeo_wsn/evolve')\nos.chdir('/home/asaleh/Diplomka/moeo_wsn/evolve')\n"
-          ); 
+    stringstream path; 
+    cout << "Archive" << endl;
+    //path << "/home/asaleh/Diplomka/moeo_wsn/evolve";
+    path << P_PATH;
+    stringstream pyrun;
+    pyrun << "import os, sys, threading\nsys.path.append('" << path.str() <<  "')\nos.chdir('" << path.str() << "')\n";
+    PyRun_SimpleString(pyrun.str().c_str() ); 
+    cout << pyrun.str() << endl;
 	  
    if (pModule == NULL) {        
 		PyObject *pName;
-        	pName = PyString_FromString("ObjectiveVectorTraitsPrecomputed");
+        	pName = PyString_FromString(P_MODULE.c_str());
         	/* Error checking of pName left out */
         	pModule = PyImport_Import(pName);
+    cout << "Archive" << endl;
 		Py_DECREF(pName);
 		if (pModule != NULL) {
 			pFuncMin = PyObject_GetAttrString(pModule, "minimizing");
@@ -341,8 +284,6 @@ int main (int argc, char *argv[])
 			pFuncMaxBounds = PyObject_GetAttrString(pModule, "maximumBounds");
 			pFuncNoParams = PyObject_GetAttrString(pModule, "nParams");
 			pFuncEval = PyObject_GetAttrString(pModule, "evaluate");
-
-
 		}else {
 			PyErr_Print();
 	    	}
@@ -369,25 +310,41 @@ int main (int argc, char *argv[])
     eoRealInitBounded < Evolve> init (bounds);
     eoPop < Evolve > pop (POP_SIZE, init);
 
-    // build NSGA-II
-    //moeoNSGAII<Evolve > nsgaII (MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT);
-            moeoSPEA2Archive<Evolve> arch_spea(POP_SIZE);
-    moeoSPEA2<Evolve > nsgaII (MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT,arch_spea);
+   // help ?
+   make_help(parser);
+   
+   if(P_ALGO=="spea2"){
+    	// build spea2 
+    	moeoSPEA2Archive<Evolve> arch_spea(POP_SIZE);
+    	moeoSPEA2<Evolve > spea2 (MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT,arch_spea);
 
-    // help ?
-    make_help(parser);
+    	// run the algo
+    	spea2 (pop);
 
-    // run the algo
-    nsgaII (pop);
+    	// extract first front of the final population using an moeoArchive (this is the output of nsgaII)
+    	moeoUnboundedArchive < Evolve > arch;
+    	arch(pop);
 
-    // extract first front of the final population using an moeoArchive (this is the output of nsgaII)
-    moeoUnboundedArchive < Evolve > arch;
-    arch(pop);
+    	// printing of the final archive
+    	cout << "Final Spea2 Archive" << endl;
+    	arch.sortedPrintOn (cout);
+    	cout << endl;
+    }else{
+    	// build NSGA-II
+    	moeoNSGAII<Evolve > nsgaII (MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT);
 
-    // printing of the final archive
-    cout << "Final Archive" << endl;
-    arch.sortedPrintOn (cout);
-    cout << endl;
+    	// run the algo
+    	nsgaII (pop);
+
+    	// extract first front of the final population using an moeoArchive (this is the output of nsgaII)
+    	moeoUnboundedArchive < Evolve > arch;
+    	arch(pop);
+
+    	// printing of the final archive
+    	cout << "Final NSGA-II Archive" << endl;
+    	arch.sortedPrintOn (cout);
+    	cout << endl;
+    }	
   Py_XDECREF(pFuncMin);
   Py_XDECREF(pFuncMax);
   Py_XDECREF(pFuncNo);
